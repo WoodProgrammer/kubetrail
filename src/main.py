@@ -7,9 +7,22 @@ def generateSaPrefix(sa, namespace):
     return "system:serviceaccount:{}:{}".format(namespace, sa)
 
 if __name__ == "__main__":
-    k8sObj = Kubernetes()
+    print("\U0001F525 \U0001F525 \U0001F525 \U0001F525 \U0001F525 \U0001F525 \U0001F525 \U0001F525")
+    print("""
+_   __     _       _______        _   _ 
+| |/ /    | |     |__   __|      (_) | |
+| ' /_   _| |__   ___| |_ __ __ _ _  | |
+|  <| | | | '_ \ / _ \ | '__/ _` | | | |
+| . \ |_| | |_) |  __/ | | | (_| | | | |
+|_|\_\__,_|_.__/ \___|_|_|  \__,_|_| |_|
 
+CloudTrail Analyzer for EKS IRSA Resources version number 0.0.1
+
+    """)
+    k8sObj = Kubernetes()
     parser = OptionParser()
+    
+    obj = CloudTrail()
 
     parser.add_option("-s", "--service-account", dest="serviceaccount",
                     help="The name of the serviceaccount")
@@ -24,11 +37,14 @@ if __name__ == "__main__":
 
     userName = generateSaPrefix(saName, namespace)
     
-    getRolePermissions = k8sObj.parseSA(saName)
+    roleName = k8sObj.parseSA(saName)
+    #print(roleName)
 
+    rolePermissionList = obj.getPermissionList(roleName)
 
-    for permission in getRolePermissions:
-
+    #print(rolePermissionList)
+    print("|Permission Name| Usage Count|")
+    for permission in rolePermissionList:
         client = boto3.client("cloudtrail")
-        obj = CloudTrail(client)
-        results = obj.queryEvents(userName, permission)
+        results = obj.queryEvents(client, userName, permission)
+        print("|{}| {}|".format(permission, results[permission]), end='   ')
