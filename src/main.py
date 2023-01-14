@@ -1,11 +1,14 @@
 import boto3
 from cloudtrail import CloudTrail
 from optparse import OptionParser
+from k8s import Kubernetes
 
 def generateSaPrefix(sa, namespace):
     return "system:serviceaccount:{}:{}".format(namespace, sa)
 
 if __name__ == "__main__":
+    k8sObj = Kubernetes()
+
     parser = OptionParser()
 
     parser.add_option("-s", "--service-account", dest="serviceaccount",
@@ -20,7 +23,12 @@ if __name__ == "__main__":
     namespace = options.namespace
 
     userName = generateSaPrefix(saName, namespace)
+    
+    getRolePermissions = k8sObj.parseSA(saName)
 
-    client = boto3.client("cloudtrail")
-    obj = CloudTrail(client)
-    results = obj.queryEvents(userName, "ListBuckets")
+
+    for permission in getRolePermissions:
+
+        client = boto3.client("cloudtrail")
+        obj = CloudTrail(client)
+        results = obj.queryEvents(userName, permission)
